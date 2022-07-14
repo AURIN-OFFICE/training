@@ -529,7 +529,9 @@ folium.GeoJson(box,name='box',style_function = lambda x: {'fillColor': 'yellow'}
 Map_aurin
 ```
 
+![Screen-Shot-2022-07-08-at-4 07 32-pm-1365x800](https://user-images.githubusercontent.com/106126121/178858941-29e27337-41e1-4632-ab8c-078cfc104caa.png)
+
+
 Output:
 
-![Screen-Shot-2022-07-12-at-2 41 38-pm-1089x800](https://user-images.githubusercontent.com/106126121/178858868-0a15ca00-c501-4762-8739-a38e994ee430.png)
 
