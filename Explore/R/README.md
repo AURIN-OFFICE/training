@@ -271,9 +271,6 @@ download.file(request, destfile = "data_bbox.gml", mode='wb')
 data <- read_sf("data_bbox.gml")
 ### --- Show the map --- ###
 mapview(data)
-
-```R
-
 ```
 
 Output:
