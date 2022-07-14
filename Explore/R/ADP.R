@@ -108,4 +108,71 @@ View(head(data))
 # Now you will see fire stations on a map as individual point locations:
 mapview(data)
 
+
+
+### g. Filter data by bounding box
+# The ADP supports spatial queries that permit filtering your data 
+# in a particular spatial area. For example, you can filter the data 
+# by #bounding box (BBOX). The BBOX is a function from shapely.geometry.
+
+# The BBOX parameter allows you to search for features that are contained 
+# (or partially contained) inside a box of user-defined coordinates. 
+# The format of the BBOX parameter is bbox=a1,b1,a2,b2,[crs] 
+# where a1, b1, a2, and b2 represent the coordinate values. 
+# The shapely.geometry.box() function makes a rectangular polygon from the provided BBOX parameters.
+
+# We recommend using BBox finder (http://bboxfinder.com) to create your BBOX using a base map.
+# Click the rectangle icon and draw a rectangle using 
+# your mouse to cover the Melbourne CBD area or any other areas you are interested in.
+
+##### ------------ Replace BBox ---------- #####
+# Now you can see the selected rectangle is covered in pink. 
+# You may check if it is the right area you’d like to collect data from. 
+# Copy the BBOX coordinates from the highlighted area, 
+# and replace the coordinates after the code min_x,min_y,max_x,max_y =.
+
+# You also need to replace yourName and yourPassword 
+# in the code block below with your ADP username and password. 
+# If you don’t have ADP credentials, 
+# please generate your credentials on https://adp-access.aurin.org.au/
+
+###### ------ Libraries ------- ####
+library(sf)
+library(httr)
+library(tidyverse)
+library(ows4R)
+library(mapview)
+library(utils)
+
+##### ----- Crendentials ------ #####
+wfs_url <- "https://adp.aurin.org.au/geoserver/wfs"
+user_name <- "yourName"
+password <- "yourPassword"
+#### ------ Define url ----- ####
+url <- parse_url(wfs_url)
+url$hostname <- paste(user_name,":",password,"@",url$hostname, sep="")
+
+#### ------ Select the data set ----- #####
+ADP_ID = 'datasource-OSM-UoM_AURIN_DB:osm_lines_2017'
+
+### ------ Copy vector from http://bboxfinder.com/ ---- #####
+bbox = '144.927135,-37.828836,145.000648,-37.799408'
+
+### ------ Create request ---- #####
+url$query <- list(service = "WFS",
+                  version='2.0.0',
+                  request = "GetFeature",
+                  typeNames = ADP_ID,
+                  bbox=paste0(bbox,',EPSG:4326'))
+request <- build_url(url)
+
+#### ---- Download data from server ----- ####
+download.file(request, destfile = "data_bbox.gml", mode='wb')
+### ---- Read the data ---- #### 
+data <- read_sf("data_bbox.gml")
+### --- Show the map --- ###
+mapview(data)
+
+
+
   
