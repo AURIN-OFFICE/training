@@ -466,3 +466,70 @@ The ADP supports spatial queries that permit filtering your data in a particular
 The BBOX parameter allows you to search for features that are contained (or partially contained) inside a box of user-defined coordinates. The format of the BBOX parameter is `bbox=a1,b1,a2,b2,[crs]` where `a1`,`b1`,`a2` and `b2` represent the coordinate values. The `shapely.geometry.box()` function makes a rectangular polygon from the provided BBOX parameters.
 
 We recommend using [BBox finder](http://bboxfinder.com/#-37.821684,144.951425,-37.806563,144.976358) to create your BBOX using a base map. Click the rectangle icon and draw a rectangle using your mouse to cover the Melbourne CBD area or any other areas you are interested in.
+
+![Screen-Shot-2022-07-12-at-2 41 38-pm-1089x800](https://user-images.githubusercontent.com/106126121/178858710-14892508-aecf-4cfa-9078-bb5fbab94e96.png)
+
+Now you can see the selected rectangle is covered in pink. You may check if it is the right area you’d like to collect data from. Copy the BBOX coordinates from the highlighted area, and replace the coordinates after the code `min_x,min_y,max_x,max_y -`. 
+
+![Screen-Shot-2022-07-12-at-2 44 19-pm-1089x800](https://user-images.githubusercontent.com/106126121/178858739-a1749d5a-b51b-4a84-81ec-09a448a4538b.png)
+
+You also need to replace yourName and yourPassword in the code block below with your ADP username and password. If you don’t have ADP credentials, please generate your credentials via the [ADP Access Dashboard](https://adp-access.aurin.org.au/).
+
+
+```python
+###### ------ Libraries ------- ####
+from owslib.wfs import WebFeatureService
+import geopandas as gpd
+from shapely.geometry import box
+import io
+import folium 
+
+##### ----- Crendentials ------ #####
+WFS_USERNAME = 'yourName' 
+WFS_PASSWORD= 'yourPassword'
+VERSION = '2.0.0'
+WFS_URL='https://adp.aurin.org.au/geoserver/wfs'
+adp_client = WebFeatureService(url=WFS_URL,
+    username=WFS_USERNAME, 
+    password=WFS_PASSWORD, 
+    version=VERSION)
+
+#### ------ Select the data set ----- #####
+ADP_ID = 'datasource-OSM-UoM_AURIN_DB:osm_lines_2017'
+
+### ------ Copy vector from http://bboxfinder.com/ ---- #####
+min_x,min_y,max_x,max_y = 144.951425,-37.821684,144.976358,-37.806563
+
+# Create the polygon using Shapely
+box_shape = box(minx=min_x, miny=min_y, maxx=max_x, maxy=max_y)
+Box_shape = gpd.GeoDataFrame({'box': 'Box','geometry': [box_shape]})
+#### ------ Request data for Melbourne CBD ----- ####
+response = adp_client.getfeature(typename = ADP_ID, 
+                                bbox=(min_x, min_y, max_x, max_y))
+
+#### ---- Read data from server ----- ####
+features_data = gpd.read_file(io.BytesIO(response.read()))
+#### ---- Storage data ----- ####
+features_data.to_pickle('data_osm.gml')
+
+### ----- Define the basemap: Center: Australia ---- ### 
+Map_aurin = folium.Map(location=[box_shape.centroid.coords[0][1],box_shape.centroid.coords[0][0]],zoom_start=15,tiles='cartodbpositron')
+### ----- Select Name and Geometry ---- ###
+### ----- Create a JSON with the information ------ ####
+map_data = features_data[['gml_id','geometry']] 
+### ---- Features box ----- ##
+layer = map_data.to_json()
+### ---- Shape box ---- #####
+box = Box_shape.to_json()
+### --- Geojson -- ### 
+folium.GeoJson(layer,name='features').add_to(Map_aurin)
+folium.GeoJson(box,name='box',style_function = lambda x: {'fillColor': 'yellow'}).add_to(Map_aurin)
+
+### --- Show the map --- ###
+Map_aurin
+```
+
+Output:
+
+![Screen-Shot-2022-07-12-at-2 41 38-pm-1089x800](https://user-images.githubusercontent.com/106126121/178858868-0a15ca00-c501-4762-8739-a38e994ee430.png)
+
