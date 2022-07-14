@@ -458,229 +458,81 @@ out.close()
 data_fire = geopandas.read_file('data_fire.geojson')
 ```
 
-## g. Accessing large datasets (optional)
 
-We recommend following the steps below to download large datasets.
+## g. Filter data by bounding box
 
-Warning: The lines below require Computational resources. We recommend running this code in a local environment or a cloud environment with enough resources to process the data.
+The ADP supports spatial queries that permit filtering your data in a particular spatial area. For example, you can filter the data by bounding box (BBOX). The BBOX is a function from shapely.geometry.
+
+The BBOX parameter allows you to search for features that are contained (or partially contained) inside a box of user-defined coordinates. The format of the BBOX parameter is `bbox=a1,b1,a2,b2,[crs]` where `a1`,`b1`,`a2` and `b2` represent the coordinate values. The `shapely.geometry.box()` function makes a rectangular polygon from the provided BBOX parameters.
+
+We recommend using [BBox finder](http://bboxfinder.com/#-37.821684,144.951425,-37.806563,144.976358) to create your BBOX using a base map. Click the rectangle icon and draw a rectangle using your mouse to cover the Melbourne CBD area or any other areas you are interested in.
+
+![Screen-Shot-2022-07-12-at-2 41 38-pm-1089x800](https://user-images.githubusercontent.com/106126121/178858710-14892508-aecf-4cfa-9078-bb5fbab94e96.png)
+
+Now you can see the selected rectangle is covered in pink. You may check if it is the right area you’d like to collect data from. Copy the BBOX coordinates from the highlighted area, and replace the coordinates after the code `min_x,min_y,max_x,max_y -`. 
+
+![Screen-Shot-2022-07-12-at-2 44 19-pm-1089x800](https://user-images.githubusercontent.com/106126121/178858739-a1749d5a-b51b-4a84-81ec-09a448a4538b.png)
+
+You also need to replace yourName and yourPassword in the code block below with your ADP username and password. If you don’t have ADP credentials, please generate your credentials via the [ADP Access Dashboard](https://adp-access.aurin.org.au/).
 
 
 ```python
-###### ------ Libraries ------- #####
+###### ------ Libraries ------- ####
 from owslib.wfs import WebFeatureService
-import geopandas as gpd 
-import requests
+import geopandas as gpd
+from shapely.geometry import box
 import io
-import re
-
-
-def get_numberOfFeatures(username,password,version,layer):
-    #### ----- Create url ------ ####
-    WFS_URL='https://'+str(username)+':'+str(password)+'@adp.aurin.org.au/geoserver/wfs'
-    #### ----- Create request ---- ##### 
-    r = requests.get(WFS_URL, params={'service': 'WFS','version': version,'request': 'GetFeature','resultType': 'hits','typename': layer})  
-    #### ----- Get the number of observations ---- ### 
-    rows_sample = int(''.join(re.findall(string =re.findall(string = str(r.content),pattern='numberOfFeatures.+timeStamp|numberMatched.+numberReturned')[0],pattern='[0-9]')))
-    print('This data set contains ' + str(rows_sample) + ' rows')
-    return rows_sample
-
+import folium 
 
 ##### ----- Crendentials ------ #####
-WFS_USERNAME = 'yourName'
+WFS_USERNAME = 'yourName' 
 WFS_PASSWORD= 'yourPassword'
-version = '2.0.0'
+VERSION = '2.0.0'
 WFS_URL='https://adp.aurin.org.au/geoserver/wfs'
-adp_client = WebFeatureService(url=WFS_URL,username=WFS_USERNAME, password=WFS_PASSWORD, version=version)
-
+adp_client = WebFeatureService(url=WFS_URL,
+    username=WFS_USERNAME, 
+    password=WFS_PASSWORD, 
+    version=VERSION)
 
 #### ------ Select the data set ----- #####
-aurin_api_id = 'datasource-OSM-UoM_AURIN_DB:osm_australia_line_2020'
-#### ----- Check the number the rows ------ ####
-rows_sample = get_numberOfFeatures(username= WFS_USERNAME, password = WFS_PASSWORD, version = version, layer = aurin_api_id)
-#### ---- Split in different parts ------ ### 
-chunks_size = 1000000
-split_parts = list(range(chunks_size,rows_sample,chunks_size))
-print('The download will be split into ' + str(len(split_parts)) + ' parts')
+ADP_ID = 'datasource-OSM-UoM_AURIN_DB:osm_lines_2017'
 
+### ------ Copy vector from http://bboxfinder.com/ ---- #####
+min_x,min_y,max_x,max_y = 144.951425,-37.821684,144.976358,-37.806563
 
-###  After creating the chunks, the code below starts to download and store the data:
+# Create the polygon using Shapely
+box_shape = box(minx=min_x, miny=min_y, maxx=max_x, maxy=max_y)
+Box_shape = gpd.GeoDataFrame({'box': 'Box','geometry': [box_shape]})
+#### ------ Request data for Melbourne CBD ----- ####
+response = adp_client.getfeature(typename = ADP_ID, 
+                                bbox=(min_x, min_y, max_x, max_y))
 
-#### ----- Download data ---- #####
-for chunk in range(0,len(split_parts)):
-    print('Part: ' + str(chunk))
-    partial_data = gpd.read_file(io.BytesIO(adp_client.getfeature(typename=aurin_api_id,startindex=split_parts[chunk]).read()))
-    #### ------ Save in file ----- ####
-    #### ------ First time: init file --- #### 
-    if chunk == 0:
-        partial_data.to_file('data.shp')
-    else:
-    #### ------ Overwrite file ---- ######
-        partial_data.to_file('data.shp', mode = "a")
+#### ---- Read data from server ----- ####
+features_data = gpd.read_file(io.BytesIO(response.read()))
+#### ---- Storage data ----- ####
+features_data.to_pickle('data_osm.gml')
+
+### ----- Define the basemap: Center: Australia ---- ### 
+Map_aurin = folium.Map(location=[box_shape.centroid.coords[0][1],box_shape.centroid.coords[0][0]],zoom_start=15,tiles='cartodbpositron')
+### ----- Select Name and Geometry ---- ###
+### ----- Create a JSON with the information ------ ####
+map_data = features_data[['gml_id','geometry']] 
+### ---- Features box ----- ##
+layer = map_data.to_json()
+### ---- Shape box ---- #####
+box = Box_shape.to_json()
+### --- Geojson -- ### 
+folium.GeoJson(layer,name='features').add_to(Map_aurin)
+folium.GeoJson(box,name='box',style_function = lambda x: {'fillColor': 'yellow'}).add_to(Map_aurin)
+
+### --- Show the map --- ###
+Map_aurin
 ```
 
-### Read the data using Geopandas
-
-Warning: We recommend loading a subsample of this data. 
+Output:
 
 
+![Screen-Shot-2022-07-08-at-4 07 32-pm-1365x800](https://user-images.githubusercontent.com/106126121/178858941-29e27337-41e1-4632-ab8c-078cfc104caa.png)
 
-```python
-osm = gpd.read_file('data.shp')
-osm.head()
-```
-
-
-<table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th></th>
-      <th>gml_id</th>
-      <th>osm_id</th>
-      <th>highway</th>
-      <th>z_order</th>
-      <th>ogc_fid</th>
-      <th>name</th>
-      <th>oneway</th>
-      <th>bicycle</th>
-      <th>foot</th>
-      <th>ref</th>
-      <th>...</th>
-      <th>religion</th>
-      <th>source</th>
-      <th>wetland</th>
-      <th>toll</th>
-      <th>shop</th>
-      <th>denominati</th>
-      <th>military</th>
-      <th>building</th>
-      <th>office</th>
-      <th>geometry</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th>0</th>
-      <td>osm_australia_line_2020.1000001</td>
-      <td>663074470</td>
-      <td>service</td>
-      <td>15</td>
-      <td>1000001</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>...</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>LINESTRING (145.26260 -37.79060, 145.26310 -37...</td>
-    </tr>
-    <tr>
-      <th>1</th>
-      <td>osm_australia_line_2020.1000002</td>
-      <td>43681009</td>
-      <td>service</td>
-      <td>15</td>
-      <td>1000002</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>...</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>LINESTRING (145.26270 -37.79070, 145.26330 -37...</td>
-    </tr>
-    <tr>
-      <th>2</th>
-      <td>osm_australia_line_2020.1000003</td>
-      <td>663074472</td>
-      <td>service</td>
-      <td>15</td>
-      <td>1000003</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>...</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>LINESTRING (145.26310 -37.79030, 145.26320 -37...</td>
-    </tr>
-    <tr>
-      <th>3</th>
-      <td>osm_australia_line_2020.1000004</td>
-      <td>663074474</td>
-      <td>service</td>
-      <td>15</td>
-      <td>1000004</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>...</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>LINESTRING (145.26330 -37.79040, 145.26340 -37...</td>
-    </tr>
-    <tr>
-      <th>4</th>
-      <td>osm_australia_line_2020.1000005</td>
-      <td>177619960</td>
-      <td>residential</td>
-      <td>33</td>
-      <td>1000005</td>
-      <td>Gladys Grove</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>...</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>None</td>
-      <td>LINESTRING (145.26800 -37.79360, 145.26470 -37...</td>
-    </tr>
-  </tbody>
-</table>
-<p>5 rows × 66 columns</p>
-</div>
 
 
