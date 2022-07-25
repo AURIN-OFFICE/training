@@ -113,7 +113,10 @@ mapview(data)
 ### g. Filter data by bounding box
 # The ADP supports spatial queries that permit filtering your data 
 # in a particular spatial area. For example, you can filter the data 
-# by #bounding box (BBOX). The BBOX is a function from shapely.geometry.
+# by #bounding box (BBOX). By adding the BBOX, instead of downloading
+# entire datasets, which can be very large and irrelevant to your project, 
+# you can download data according to your area of interest. 
+# Here we show an example to use the Melbourne CBD as the area of interest.
 
 # The BBOX parameter allows you to search for features that are contained 
 # (or partially contained) inside a box of user-defined coordinates. 
