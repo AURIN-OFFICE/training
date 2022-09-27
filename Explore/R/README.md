@@ -20,7 +20,7 @@ In this tutorial, our goal is to use RStudio to connect to the ADP and download 
 ## 1. Choose between Different R Environments
 [R](https://www.r-project.org) is a free and open-source statistical software program and programming language. It is a very powerful tool for data analysts from all disciplines, from economics to ecology and geography. The [geographic information system](https://en.wikipedia.org/wiki/Geographic_information_system) (GIS) capabilities of R have developed significantly over the last decade.
 
-If you are getting started with R, we suggest you use a cloud environment, such as SWAN in the CloudStor, as it has R and its prerequisites already installed. If you wish to use your personal computer, we recommend using R version 4.2.0 or later on your computer. We hope the image below may help you understand the benefits and limitations of each option.
+If you are getting started with R, we suggest you use a cloud environment, such as SWAN in the CloudStor, as it has R and its prerequisites already installed. If you wish to use your personal computer, we recommend using R version 4.2.1 or later on your computer. We hope the image below may help you understand the benefits and limitations of each option.
 
 ### <img src="https://user-images.githubusercontent.com/106126121/177250393-a6a97131-f098-42a4-8eb8-44cf088166fb.png" width="600"> 
 
