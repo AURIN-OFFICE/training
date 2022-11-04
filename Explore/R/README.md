@@ -61,7 +61,7 @@ install.packages(c("sf", "httr", "tidyverse", "ows4R", "mapview"))
 
 ```
 
-After installation, we can use library() to load these packages. Again, you can copy the code below, and paste it into the Console.
+After installation, we can use `library()` to load these packages. Again, you can copy the code below, and paste it into the Console.
 
 
 ```R
