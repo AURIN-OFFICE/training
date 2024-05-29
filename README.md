@@ -30,11 +30,13 @@ Learn how to connect to the AURIN Data Provider and explore AURIN data using pop
 
 Learn how to connect to the AURIN Data Provider and explore AURIN data on Geographic Information Systems.
 
-### <img src="https://user-images.githubusercontent.com/106126121/176368085-d2c83583-b418-4833-b3d2-af067205bb55.png" width="25"> **[QGis](https://aurin.org.au/resources/training/explore-qgis/)**
+### <img src="https://user-images.githubusercontent.com/106126121/176368085-d2c83583-b418-4833-b3d2-af067205bb55.png" width="25"> **[QGIS](https://aurin.org.au/resources/training/explore-qgis/)**
 
-### <img src="https://user-images.githubusercontent.com/106126121/176368502-232bee90-accb-4356-bc79-8fc57ed86604.png" width="25"> **[AURIN Map](https://aurin.org.au/resources/training/aurin-map-user-guide/)**
+### <img src="https://github.com/AURIN-OFFICE/training/assets/98994288/597c7ae4-343e-431a-a88c-dbd03574977c" width="25"> **[ArcGIS Pro](https://aurin.org.au/resources/training/explore-arcgispro/)**
 
 ### <img src="https://user-images.githubusercontent.com/106126121/176367929-536ff58b-4c7d-40b5-a8ca-71feb5c7f899.png" width="25"> **[ARCMAP](https://aurin.org.au/resources/training/explore-arcmap/)**
+
+### <img src="https://user-images.githubusercontent.com/106126121/176368502-232bee90-accb-4356-bc79-8fc57ed86604.png" width="25"> **[AURIN Map](https://aurin.org.au/resources/training/aurin-map-user-guide/)**
 
 
 ## [MIT License](https://github.com/AURIN-OFFICE/training/blob/main/LICENSE) 
