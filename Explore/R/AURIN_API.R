@@ -90,7 +90,7 @@ head(api_client$getFeatureTypes(pretty = TRUE),10)
 # In this case the ADP ID is datasource-VIC_Govt_SV-UoM_AURIN_DB:wasterecyclingsurvey_lga_2010_2011. Then create the following query, pasting the ADP ID into the typeName variable within RStudio.
 
 req <- request(wfs_url) %>%
-   req_body_form(
+   req_url_query(
      "request" = "GetFeature",
      "typeName" = "datasource-VIC_Govt_SV-UoM_AURIN_DB:wasterecyclingsurvey_lga_2010_2011",
      "srsName" = "EPSG:4326"
@@ -109,7 +109,7 @@ data <- read_sf("data_recycling.gml")
 ### ---- d) View data ---- ###
 # Use the head() function again to view some of the dataset’s rows:
 
-View(head(data))
+head(data)
 # The output should consist of information about the waste and recycling services in tabular format:
 
 
@@ -178,10 +178,14 @@ bbox = '144.927135,-37.828836,145.000648,-37.799408'
 
 ### ------ Create request ---- #####
 req <- request(wfs_url) %>%
-    req_body_form(
-      "request" = "GetFeature",
-      "typeName" = ADP_ID,
-      bbox=paste0(bbox,',EPSG:4326')) %>%
+    req_url_query(
+      service = "WFS",
+      version = "2.0.0",
+      request = "GetFeature",
+      typeName = ADP_ID,
+      bbox=paste0(bbox,',EPSG:4326'),
+      srsName = "EPSG:4326"
+      ) %>%
     req_auth_basic(user_name, password)
 resp <- req |> req_perform() |> resp_body_string()
 
@@ -195,4 +199,3 @@ selected_geometry_type <- "MULTILINESTRING"
 data_converted <- st_cast(data, to = selected_geometry_type)
 ### --- Show the map with the converted data --- ###
 mapview(data_converted)
-
